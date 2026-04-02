@@ -6,6 +6,14 @@ export interface TvShow {
   '@assetType'?: string;
 }
 
+export interface Season {
+  number: number;
+  year: number;
+  tvShow: any; 
+  '@key'?: string;
+  '@assetType'?: string;
+}
+
 export interface SearchResponse<T> {
   result: T[];
 }
