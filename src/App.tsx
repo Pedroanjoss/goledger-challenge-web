@@ -12,7 +12,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/tvshows" replace />} />
           <Route path="/tvshows" element={<TvShows />} />
-          <Route path="/seasons" element={<Seasons />} />
+        <Route path="/tvshows/:showTitle/seasons" element={<Seasons />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

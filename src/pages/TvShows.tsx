@@ -14,17 +14,17 @@ import {
 import { Add as AddIcon, Search as SearchIcon } from "@mui/icons-material";
 import { tvShowService } from "../services/api";
 import type { TvShow } from "../types";
-
+import { Navigate, useNavigate } from 'react-router-dom';
 import { TvShowCard } from "../components/tvshows/TvShowCard";
 import { TvShowFormModal } from "../components/tvshows/TvShowFormModal";
-import { DeleteConfirmModal } from "../components/tvshows/DeleteConfirmModal";
+import { DeleteConfirmModal } from "../common/DeleteConfirmModal";
 import styles from "./style/TvShows.module.css";
 
 export function TvShows() {
   const [shows, setShows] = useState<TvShow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const navigate = useNavigate()
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<TvShow | null>(null);
 
@@ -37,6 +37,11 @@ export function TvShows() {
     message: "",
     severity: "success" as "success" | "error",
   });
+
+  const handleViewSeasons = (title: string) => {
+    // Usamos encodeURIComponent para proteger títulos com espaços (ex: Game of Thrones)
+    navigate(`/tvshows/${encodeURIComponent(title)}/seasons`);
+  };
 
   const loadShows = async () => {
     try {
@@ -164,11 +169,7 @@ export function TvShows() {
           ) : (
             filteredShows.map((show) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={show.title}>
-                <TvShowCard
-                  show={show}
-                  onEdit={handleOpenForm}
-                  onDelete={confirmDelete}
-                />
+                <TvShowCard show={show} onEdit={handleOpenForm} onDelete={confirmDelete} onViewSeasons={handleViewSeasons} />
               </Grid>
             ))
           )}
