@@ -14,6 +14,17 @@ export interface Season {
   '@assetType'?: string;
 }
 
+export interface Episode {
+  episodeNumber: number; // Mudou de 'number' para 'episodeNumber'
+  title: string;
+  description: string;
+  releaseDate: string;   // Novo campo obrigatório
+  rating?: number;       // Novo campo opcional
+  season: any; 
+  '@key'?: string;
+  '@assetType'?: string;
+}
+
 export interface SearchResponse<T> {
   result: T[];
 }

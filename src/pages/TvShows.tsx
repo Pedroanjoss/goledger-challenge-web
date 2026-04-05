@@ -14,7 +14,7 @@ import {
 import { Add as AddIcon, Search as SearchIcon } from "@mui/icons-material";
 import { tvShowService } from "../services/api";
 import type { TvShow } from "../types";
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { TvShowCard } from "../components/tvshows/TvShowCard";
 import { TvShowFormModal } from "../components/tvshows/TvShowFormModal";
 import { DeleteConfirmModal } from "../common/DeleteConfirmModal";
@@ -39,7 +39,6 @@ export function TvShows() {
   });
 
   const handleViewSeasons = (title: string) => {
-    // Usamos encodeURIComponent para proteger títulos com espaços (ex: Game of Thrones)
     navigate(`/tvshows/${encodeURIComponent(title)}/seasons`);
   };
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Season, TvShow } from '../types';
+import type { Episode, Season, TvShow } from '../types';
 
 export const api = axios.create({
   baseURL: 'http://ec2-50-19-36-138.compute-1.amazonaws.com/api',
@@ -117,4 +117,73 @@ export const seasonService = {
       return [];
     }
   },
+};
+
+export const episodeService = {
+  listBySeason: async (seasonKey: string) => {
+    try {
+      const payload = {
+        query: { selector: { "@assetType": "episodes", "season.@key": seasonKey } }
+      };
+      const response = await api.post('/query/search', payload);
+      let data = response.data;
+      if (data && Array.isArray(data.result)) data = data.result;
+      if (!Array.isArray(data)) data = [];
+      
+      // Ordenando pela chave correta agora: episodeNumber
+      return data.sort((a: any, b: any) => a.episodeNumber - b.episodeNumber) as Episode[];
+    } catch (error) {
+      console.error("❌ [DEBUG] Erro ao buscar episódios:", error);
+      return [];
+    }
+  },
+
+  create: async (episode: Episode, seasonKey: string) => {
+    // Garantindo que a data vá no formato ISO 8601 (ex: 2026-04-03T00:00:00.000Z)
+    const formattedDate = new Date(episode.releaseDate).toISOString();
+
+    const payload: any = {
+      asset: [{ 
+        "@assetType": "episodes",
+        episodeNumber: Number(episode.episodeNumber),
+        title: episode.title,
+        description: episode.description,
+        releaseDate: formattedDate,
+        season: { "@assetType": "seasons", "@key": seasonKey } 
+      }]
+    };
+    
+    // O rating é opcional no banco, então só mandamos se ele existir
+    if (episode.rating !== undefined && episode.rating !== null) {
+      payload.asset[0].rating = Number(episode.rating);
+    }
+
+    return api.post('/invoke/createAsset', payload);
+  },
+
+  update: async (episode: Episode, seasonKey: string) => {
+    const formattedDate = new Date(episode.releaseDate).toISOString();
+
+    const payload: any = {
+      update: { 
+        "@assetType": "episodes",
+        "@key": episode['@key'],
+        episodeNumber: Number(episode.episodeNumber),
+        title: episode.title,
+        description: episode.description,
+        releaseDate: formattedDate,
+        season: { "@assetType": "seasons", "@key": seasonKey } 
+      }
+    };
+
+    if (episode.rating !== undefined && episode.rating !== null) {
+      payload.update.rating = Number(episode.rating);
+    }
+
+    return api.put('/invoke/updateAsset', payload);
+  },
+
+  delete: (key: string) => api.delete('/invoke/deleteAsset', {
+    data: { key: { "@key": key, "@assetType": "episodes" } }
+  })
 };

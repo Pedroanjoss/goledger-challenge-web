@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Typography, Button, Box, CircularProgress, Snackbar, Alert, Grid } from '@mui/material'; // <-- Importação corrigida do seu padrão
+import { Container,Grid, Typography, Button, Box, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { Add as AddIcon, ArrowBack } from '@mui/icons-material';
 
 import { seasonService, api } from '../services/api';
 import type { Season } from '../types';
 
-
 import { SeasonCard } from '../components/seasons/SeasonCard';
 import { SeasonFormModal } from '../components/seasons/SeasonFormModal';
 import { DeleteConfirmModal } from '../common/DeleteConfirmModal';
+import { EpisodesListModal } from '../components/episodes/EpisodesListModal'; // <-- Importamos o Modal Mestre
 import styles from './style/Seasons.module.css';
 
 export function Seasons() {
@@ -20,12 +20,16 @@ export function Seasons() {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Modais
+  // Modais da Temporada
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSeasonToEdit, setSelectedSeasonToEdit] = useState<Season | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [seasonToDelete, setSeasonToDelete] = useState<Season | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // NOVO: Controle do Modal Mestre de Episódios
+  const [episodesModalOpen, setEpisodesModalOpen] = useState(false);
+  const [seasonForEpisodes, setSeasonForEpisodes] = useState<Season | null>(null);
 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
@@ -104,8 +108,13 @@ export function Seasons() {
     }
   };
 
+  // NOVO: Abre o modal de episódios ao invés de navegar!
   const handleViewEpisodes = (seasonKey: string) => {
-    navigate(`/tvshows/${encodeURIComponent(decodedShowTitle)}/seasons/${encodeURIComponent(seasonKey)}/episodes`);
+    const seasonClicked = seasons.find(s => s['@key'] === seasonKey);
+    if (seasonClicked) {
+      setSeasonForEpisodes(seasonClicked);
+      setEpisodesModalOpen(true);
+    }
   };
 
   const showToast = (message: string, severity: 'success' | 'error') => setSnackbar({ open: true, message, severity });
@@ -138,19 +147,19 @@ export function Seasons() {
       ) : (
         <Grid container spacing={3}>
           {seasons.length === 0 ? (
-             <Grid size={{ xs: 12 }}>  {/* <-- Sintaxe corrigida aqui */}
+             <Grid size={{ xs: 12 }}>
                <Typography variant="body1" color="text.secondary" align="center" sx={{ mt: 2, p: 4, border: '1px dashed #334155', borderRadius: 2 }}>
                  Esta série ainda não possui temporadas cadastradas.
                </Typography>
              </Grid>
           ) : (
             seasons.map((season) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={season['@key']}> {/* <-- Sintaxe corrigida aqui */}
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={season['@key']}>
                 <SeasonCard 
                   season={season} 
                   onEdit={handleOpenForm} 
                   onDelete={confirmDelete} 
-                  onViewEpisodes={handleViewEpisodes}
+                  onViewEpisodes={handleViewEpisodes} // Passa para nossa nova função!
                 />
               </Grid>
             ))
@@ -158,20 +167,16 @@ export function Seasons() {
         </Grid>
       )}
 
-      <SeasonFormModal 
-        open={modalOpen} 
-        onClose={() => setModalOpen(false)} 
-        onSave={handleSave} 
-        initialData={selectedSeasonToEdit}
-        activeTvShow={decodedShowTitle} 
-      />
+      {/* Modais da Temporada */}
+      <SeasonFormModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} initialData={selectedSeasonToEdit} activeTvShow={decodedShowTitle} />
+      <DeleteConfirmModal open={deleteModalOpen} titleToDelete={seasonToDelete ? `Temporada ${seasonToDelete.number}` : ''} onClose={() => setDeleteModalOpen(false)} onConfirm={handleConfirmDelete} loading={deleteLoading} />
 
-      <DeleteConfirmModal 
-        open={deleteModalOpen} 
-        titleToDelete={seasonToDelete ? `Temporada ${seasonToDelete.number}` : ''} 
-        onClose={() => setDeleteModalOpen(false)} 
-        onConfirm={handleConfirmDelete} 
-        loading={deleteLoading} 
+      {/* O NOSSO NOVO MODAL MESTRE DOS EPISÓDIOS */}
+      <EpisodesListModal
+        open={episodesModalOpen}
+        onClose={() => setEpisodesModalOpen(false)}
+        season={seasonForEpisodes}
+        showTitle={decodedShowTitle}
       />
 
       <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
