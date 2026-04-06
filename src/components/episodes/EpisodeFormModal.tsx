@@ -13,21 +13,43 @@ interface EpisodeFormModalProps {
 export function EpisodeFormModal({ open, onClose, onSave, initialData }: EpisodeFormModalProps) {
   const today = new Date().toISOString().split('T')[0];
   const [formData, setFormData] = useState<Episode>({ episodeNumber: 1, title: '', description: '', releaseDate: today, season: '' });
+  const [errors, setErrors] = useState<Partial<Record<keyof Episode, string>>>({});
   const [loading, setLoading] = useState(false);
   const isEditing = !!initialData;
 
   useEffect(() => {
     if (initialData) {
-      // Ajusta a data para o input HTML <input type="date">
       const dateForInput = initialData.releaseDate ? initialData.releaseDate.split('T')[0] : today;
       setFormData({ ...initialData, releaseDate: dateForInput });
     } else {
       setFormData({ episodeNumber: 1, title: '', description: '', releaseDate: today, season: '' });
     }
-  }, [initialData, open]);
+    setErrors({});
+  }, [initialData, open, today]);
+
+  const handleChange = (field: keyof Episode, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
+  };
+
+  const validate = () => {
+    const newErrors: Partial<Record<keyof Episode, string>> = {};
+    if (!formData.episodeNumber || formData.episodeNumber < 1) newErrors.episodeNumber = "Número deve ser maior que 0.";
+    if (!formData.title.trim()) newErrors.title = "O título é obrigatório.";
+    if (!formData.releaseDate) newErrors.releaseDate = "A data de lançamento é obrigatória.";
+    if (!formData.description.trim()) newErrors.description = "A descrição é obrigatória.";
+    if (formData.rating !== undefined && (formData.rating < 0 || formData.rating > 10)) {
+      newErrors.rating = "A avaliação deve ser entre 0 e 10.";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+
     setLoading(true);
     await onSave({ ...formData, episodeNumber: Number(formData.episodeNumber) }, isEditing);
     setLoading(false);
@@ -35,7 +57,7 @@ export function EpisodeFormModal({ open, onClose, onSave, initialData }: Episode
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ className: styles.dialogPaper }}>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <DialogTitle className={styles.dialogTitle}>
           {isEditing ? `Editar Episódio ${formData.episodeNumber}` : 'Novo Episódio'}
         </DialogTitle>
@@ -48,29 +70,31 @@ export function EpisodeFormModal({ open, onClose, onSave, initialData }: Episode
             label="Número do Episódio"
             type="number"
             fullWidth
-            required
             disabled={isEditing}
-            inputProps={{ min: 1 }}
             value={formData.episodeNumber}
-            onChange={(e) => setFormData({ ...formData, episodeNumber: Number(e.target.value) })}
+            onChange={(e) => handleChange('episodeNumber', Number(e.target.value))}
+            error={!!errors.episodeNumber}
+            helperText={errors.episodeNumber}
             className={styles.inputField}
           />
           <TextField
             label="Título"
             fullWidth
-            required
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e) => handleChange('title', e.target.value)}
+            error={!!errors.title}
+            helperText={errors.title}
             className={styles.inputField}
           />
           <TextField
             label="Data de Lançamento"
             type="date"
             fullWidth
-            required
             InputLabelProps={{ shrink: true }}
             value={formData.releaseDate}
-            onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
+            onChange={(e) => handleChange('releaseDate', e.target.value)}
+            error={!!errors.releaseDate}
+            helperText={errors.releaseDate}
             className={styles.inputField}
           />
           <TextField
@@ -80,7 +104,9 @@ export function EpisodeFormModal({ open, onClose, onSave, initialData }: Episode
             inputProps={{ min: 0, max: 10, step: 0.1 }}
             placeholder="Opcional"
             value={formData.rating ?? ''}
-            onChange={(e) => setFormData({ ...formData, rating: e.target.value ? Number(e.target.value) : undefined })}
+            onChange={(e) => handleChange('rating', e.target.value ? Number(e.target.value) : undefined)}
+            error={!!errors.rating}
+            helperText={errors.rating || "Deixe em branco se não houver"}
             className={styles.inputField}
           />
           <TextField
@@ -88,9 +114,10 @@ export function EpisodeFormModal({ open, onClose, onSave, initialData }: Episode
             fullWidth
             multiline
             rows={3}
-            required
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) => handleChange('description', e.target.value)}
+            error={!!errors.description}
+            helperText={errors.description}
             className={styles.inputField}
             sx={{ mt: 2 }}
           />

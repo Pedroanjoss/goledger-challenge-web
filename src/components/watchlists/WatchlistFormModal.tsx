@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, CircularProgress, Typography, MenuItem, Select, InputLabel, FormControl, OutlinedInput, Checkbox, ListItemText, Chip, Box } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, CircularProgress, Typography, MenuItem, Select, InputLabel, FormControl, OutlinedInput, Checkbox, ListItemText, Chip, Box, FormHelperText } from '@mui/material';
 import type { Watchlist, TvShow } from '../../types';
 import styles from './style/WatchlistFormModal.module.css';
 
@@ -8,33 +8,44 @@ interface WatchlistFormModalProps {
   onClose: () => void;
   onSave: (watchlist: Watchlist, selectedShowsKeys: string[], isEditing: boolean) => Promise<void>;
   initialData?: Watchlist | null;
-  availableShows: TvShow[]; // Recebe a lista de todas as séries
+  availableShows: TvShow[];
 }
 
 export function WatchlistFormModal({ open, onClose, onSave, initialData, availableShows }: WatchlistFormModalProps) {
   const [formData, setFormData] = useState<Watchlist>({ title: '', description: '' });
-  // Guarda os UUIDs (@key) das séries selecionadas
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [errors, setErrors] = useState<{ title?: string }>({});
   const [loading, setLoading] = useState(false);
   const isEditing = !!initialData;
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
-      // Extrai os @keys das séries que já vieram salvas na watchlist
-      if (initialData.tvShows) {
-        setSelectedKeys(initialData.tvShows.map(show => show['@key']));
-      } else {
-        setSelectedKeys([]);
-      }
+      setSelectedKeys(initialData.tvShows ? initialData.tvShows.map(show => show['@key']) : []);
     } else {
       setFormData({ title: '', description: '' });
       setSelectedKeys([]);
     }
+    setErrors({});
   }, [initialData, open]);
+
+  const handleChangeTitle = (value: string) => {
+    setFormData(prev => ({ ...prev, title: value }));
+    if (errors.title) setErrors({});
+  };
+
+  const validate = () => {
+    if (!formData.title.trim()) {
+      setErrors({ title: "O título da lista é obrigatório." });
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+
     setLoading(true);
     await onSave(formData, selectedKeys, isEditing);
     setLoading(false);
@@ -42,7 +53,7 @@ export function WatchlistFormModal({ open, onClose, onSave, initialData, availab
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ className: styles.dialogPaper }}>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <DialogTitle className={styles.dialogTitle}>
           {isEditing ? 'Editar Watchlist' : 'Nova Watchlist'}
         </DialogTitle>
@@ -54,14 +65,14 @@ export function WatchlistFormModal({ open, onClose, onSave, initialData, availab
           <TextField
             label="Título da Lista"
             fullWidth
-            required
-            disabled={isEditing} // Chave primária não pode mudar
+            disabled={isEditing}
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e) => handleChangeTitle(e.target.value)}
+            error={!!errors.title}
+            helperText={errors.title}
             className={styles.inputField}
           />
 
-          {/* COMPONENTE DE MÚLTIPLA ESCOLHA */}
           <FormControl fullWidth className={styles.inputField}>
             <InputLabel>Séries na Lista</InputLabel>
             <Select
@@ -76,7 +87,7 @@ export function WatchlistFormModal({ open, onClose, onSave, initialData, availab
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map((key) => {
                     const show = availableShows.find(s => s['@key'] === key);
-                    return <Chip key={key} label={show ? show.title : 'Série Desconhecida'} size="small" />;
+                    return <Chip key={key} label={show ? show.title : 'Desconhecida'} size="small" />;
                   })}
                 </Box>
               )}
@@ -88,6 +99,7 @@ export function WatchlistFormModal({ open, onClose, onSave, initialData, availab
                 </MenuItem>
               ))}
             </Select>
+            <FormHelperText>Opcional: Você pode adicionar séries depois.</FormHelperText>
           </FormControl>
 
           <TextField

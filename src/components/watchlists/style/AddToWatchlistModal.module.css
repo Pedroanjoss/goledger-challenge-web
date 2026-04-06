@@ -1,7 +1,7 @@
 .dialogPaper { 
   border-radius: 12px !important; 
   background-image: none !important;
-  border: 1px solid #1e293b !important; /* Borda suave acompanhando seus cards */
+  border: 1px solid #1e293b !important;
 }
 .listOption { 
   border-radius: 8px !important; 

@@ -12,7 +12,12 @@ interface SeasonFormModalProps {
 }
 
 export function SeasonFormModal({ open, onClose, onSave, initialData, activeTvShow }: SeasonFormModalProps) {
-  const [formData, setFormData] = useState<Season>({ number: 1, year: 2024, tvShow: '' });
+  const currentYear = new Date().getFullYear();
+  const [formData, setFormData] = useState<Season>({ number: 1, year: currentYear, tvShow: '' });
+  
+  // CORREÇÃO AQUI: Tipagem flexível que aceita qualquer chave de Season
+  const [errors, setErrors] = useState<Partial<Record<keyof Season, string>>>({}); 
+  
   const [loading, setLoading] = useState(false);
   const isEditing = !!initialData;
 
@@ -20,12 +25,33 @@ export function SeasonFormModal({ open, onClose, onSave, initialData, activeTvSh
     if (initialData) {
       setFormData(initialData);
     } else {
-      setFormData({ number: 1, year: new Date().getFullYear(), tvShow: '' });
+      setFormData({ number: 1, year: currentYear, tvShow: '' });
     }
-  }, [initialData, open]);
+    setErrors({}); // Limpa os erros ao abrir/fechar o modal
+  }, [initialData, open, currentYear]);
+
+  // Função elegante que atualiza o dado e já apaga o erro da tela sem reclamar
+  const handleChange = (field: keyof Season, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
+  };
+
+  const validate = () => {
+    const newErrors: Partial<Record<keyof Season, string>> = {};
+    if (!formData.number || formData.number < 1) {
+      newErrors.number = "O número da temporada deve ser maior que 0.";
+    }
+    if (!formData.year || formData.year < 1900 || formData.year > 2100) {
+      newErrors.year = "Insira um ano de lançamento válido.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return; // Se a validação falhar, para por aqui!
+
     setLoading(true);
     await onSave({ ...formData, number: Number(formData.number), year: Number(formData.year) }, isEditing);
     setLoading(false);
@@ -33,7 +59,7 @@ export function SeasonFormModal({ open, onClose, onSave, initialData, activeTvSh
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ className: styles.dialogPaper }}>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <DialogTitle className={styles.dialogTitle}>
           {isEditing ? `Editar Temp. ${formData.number}` : 'Nova Temporada'}
         </DialogTitle>
@@ -46,11 +72,11 @@ export function SeasonFormModal({ open, onClose, onSave, initialData, activeTvSh
             label="Número da Temporada"
             type="number"
             fullWidth
-            required
             disabled={isEditing} 
-            inputProps={{ min: 1 }}
             value={formData.number}
-            onChange={(e) => setFormData({ ...formData, number: Number(e.target.value) })}
+            onChange={(e) => handleChange('number', Number(e.target.value))}
+            error={!!errors.number} 
+            helperText={errors.number} 
             className={styles.inputField}
           />
           
@@ -58,9 +84,10 @@ export function SeasonFormModal({ open, onClose, onSave, initialData, activeTvSh
             label="Ano de Lançamento"
             type="number"
             fullWidth
-            required
             value={formData.year}
-            onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+            onChange={(e) => handleChange('year', Number(e.target.value))}
+            error={!!errors.year}
+            helperText={errors.year}
             className={styles.inputField}
           />
         </DialogContent>
