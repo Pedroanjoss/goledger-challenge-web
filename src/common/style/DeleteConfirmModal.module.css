@@ -1,0 +1,6 @@
+.dialogPaper { border-radius: 12px !important; }
+.dialogTitle { padding-bottom: 8px !important; font-weight: 700 !important; color: #ef4444 !important; display: flex !important; align-items: center !important; gap: 8px !important; }
+.subtitle { margin-bottom: 8px !important; }
+.actions { padding: 24px !important; padding-top: 0 !important; }
+.cancelButton { text-transform: none !important; font-weight: 600 !important; }
+.deleteButton { border-radius: 8px !important; text-transform: none !important; font-weight: 600 !important; }

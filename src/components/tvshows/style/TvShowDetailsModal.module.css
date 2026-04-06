@@ -1,0 +1,41 @@
+.dialogPaper {
+  border-radius: 12px !important;
+}
+
+.dialogTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 8px !important;
+}
+
+.showTitle {
+  font-weight: 700 !important;
+}
+
+.ageChip {
+  font-weight: 700 !important;
+  margin-top: 8px !important;
+}
+
+.sectionTitle {
+  font-weight: 700 !important;
+  margin-bottom: 8px !important;
+}
+
+.descriptionText {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.footerBox {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.closeButton {
+  border-radius: 8px !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+}

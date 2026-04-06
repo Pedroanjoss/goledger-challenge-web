@@ -1,0 +1,9 @@
+.card { height: 100%; display: flex; flex-direction: column; border-radius: 16px !important; transition: all 0.3s ease !important; background-image: none !important; border: 1px solid #1e293b !important; }
+.card:hover { transform: translateY(-4px); border-color: #3B82F6 !important; box-shadow: 0 12px 30px rgba(0,0,0,0.4) !important; }
+.header { padding: 24px; padding-bottom: 16px; flex-grow: 1; }
+.title { margin-bottom: 8px !important; font-weight: 700 !important; }
+.actions { justify-content: space-between; padding: 16px !important; padding-top: 0 !important; }
+.seasonsButton { text-transform: none !important; font-weight: 600 !important; }
+.watchlistButton { background-color: rgba(139, 92, 246, 0.1) !important; color: #8b5cf6 !important; }
+.editButton { background-color: rgba(59, 130, 246, 0.1) !important; }
+.deleteButton { background-color: rgba(239, 68, 68, 0.1) !important; }

@@ -1,0 +1,88 @@
+.container {
+  margin-top: 40px !important;
+  margin-bottom: 64px !important;
+  max-width: 1200px !important;
+}
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  gap: 24px;
+}
+
+.pageTitle {
+  font-weight: 800 !important;
+  letter-spacing: -1px !important;
+}
+
+.actionsContainer {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.searchInput .MuiOutlinedInput-root {
+  border-radius: 12px;
+}
+
+
+.listButton {
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  padding: 0 24px !important;
+  border-width: 2px !important;
+  height: 42px; 
+  white-space: nowrap !important; 
+  min-width: max-content !important;
+}
+.listButton:hover {
+  border-width: 2px !important;
+}
+
+.addButton {
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  padding: 0 24px !important;
+  height: 42px;
+  white-space: nowrap !important; 
+  min-width: max-content !important; 
+}
+
+.loaderContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 80px;
+}
+
+.emptyState {
+  margin-top: 40px !important;
+  text-align: center;
+}
+
+.snackbarAlert {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+@media (max-width: 900px) {
+  .headerContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 600px) {
+  .actionsContainer {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 600px) {
+  .searchInput {
+    min-width: 300px !important;
+  }
+}

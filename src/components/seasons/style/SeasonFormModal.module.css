@@ -1,0 +1,7 @@
+.dialogPaper { border-radius: 12px !important; }
+.dialogTitle { padding-bottom: 8px !important; font-weight: 700 !important; }
+.subtitle { margin-bottom: 24px !important; }
+.inputField { margin-bottom: 20px !important; }
+.actions { padding: 24px !important; padding-top: 0 !important; }
+.cancelButton { text-transform: none !important; font-weight: 600 !important; }
+.saveButton { border-radius: 8px !important; text-transform: none !important; font-weight: 600 !important; }
