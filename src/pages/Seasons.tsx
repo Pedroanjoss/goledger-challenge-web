@@ -18,7 +18,7 @@ import type { Season } from "../types";
 import { SeasonCard } from "../components/seasons/SeasonCard";
 import { SeasonFormModal } from "../components/seasons/SeasonFormModal";
 import { DeleteConfirmModal } from "../common/DeleteConfirmModal";
-import { EpisodesListModal } from "../components/episodes/EpisodesListModal"; // <-- Importamos o Modal Mestre
+import { EpisodesListModal } from "../components/episodes/EpisodesListModal";
 import styles from "./style/Seasons.module.css";
 import { getErrorMessage } from "../utils/errorHandle";
 
@@ -158,42 +158,39 @@ export function Seasons() {
 
   return (
     <Container className={styles.container}>
-      <Box mb={4}>
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => navigate("/tvshows")}
-          sx={{ mb: 2, color: "text.secondary" }}
-        >
-          Voltar para Catálogo
-        </Button>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          flexWrap="wrap"
-          gap={2}
-        >
-          <Box>
-            <Typography
-              variant="h3"
-              color="primary"
-              className={styles.pageTitle}
-            >
-              {decodedShowTitle}
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              Gerencie as temporadas desta série
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenForm()}
-            className={styles.addButton}
-          >
-            Nova Temporada
-          </Button>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate("/tvshows")}
+        sx={{ mb: 2, color: "text.secondary", textTransform: "none" }}
+      >
+        Voltar para Catálogo
+      </Button>
+
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        flexWrap="wrap"
+        gap={2}
+        mb={4}
+      >
+        <Box>
+          <Typography variant="h3" color="primary" className={styles.pageTitle}>
+            {decodedShowTitle}
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            Gerencie as temporadas desta série
+          </Typography>
         </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenForm()}
+          className={styles.addButton}
+          disableElevation
+        >
+          Nova Temporada
+        </Button>
       </Box>
 
       {loading ? (
@@ -225,7 +222,7 @@ export function Seasons() {
                   season={season}
                   onEdit={handleOpenForm}
                   onDelete={confirmDelete}
-                  onViewEpisodes={handleViewEpisodes} // Passa para nossa nova função!
+                  onViewEpisodes={handleViewEpisodes}
                 />
               </Grid>
             ))
@@ -233,7 +230,6 @@ export function Seasons() {
         </Grid>
       )}
 
-      {/* Modais da Temporada */}
       <SeasonFormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -250,8 +246,6 @@ export function Seasons() {
         onConfirm={handleConfirmDelete}
         loading={deleteLoading}
       />
-
-      {/* O NOSSO NOVO MODAL MESTRE DOS EPISÓDIOS */}
       <EpisodesListModal
         open={episodesModalOpen}
         onClose={() => setEpisodesModalOpen(false)}
@@ -264,7 +258,11 @@ export function Seasons() {
         autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert severity={snackbar.severity} variant="filled">
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ borderRadius: "8px" }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

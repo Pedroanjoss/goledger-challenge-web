@@ -38,9 +38,6 @@ export function getErrorMessage(error: unknown, defaultMessage: string = "Ocorre
   if (lowerMsg.includes("validation") || lowerMsg.includes("required") || error.response?.status === 400) {
     return "Os dados enviados são inválidos ou estão incompletos. Verifique o formulário.";
   }
-
-
-  console.error("🔍 [Unhandled API Error]:", backendMessage);
   
   return defaultMessage;
 }

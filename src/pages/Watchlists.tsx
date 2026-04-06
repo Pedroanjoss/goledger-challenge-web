@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Grid,
@@ -9,7 +10,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Add as AddIcon, ArrowBack } from "@mui/icons-material";
 
 import { watchlistService, tvShowService } from "../services/api";
 import type { Watchlist, TvShow } from "../types";
@@ -21,6 +22,7 @@ import styles from "./style/Watchlists.module.css";
 import { getErrorMessage } from "../utils/errorHandle";
 
 export function Watchlists() {
+  const navigate = useNavigate();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [availableShows, setAvailableShows] = useState<TvShow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,31 +119,40 @@ export function Watchlists() {
 
   return (
     <Container className={styles.container}>
+      <Box mb={3}>
+        <Typography variant="h3" color="secondary" className={styles.pageTitle}>
+          Minhas Listas
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Agrupe suas séries favoritas para assistir depois.
+        </Typography>
+      </Box>
+
       <Box
-        mb={4}
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         flexWrap="wrap"
         gap={2}
+        mb={4}
       >
-        <Box>
-          <Typography
-            variant="h3"
-            color="secondary"
-            className={styles.pageTitle}
-          >
-            Minhas Listas
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Agrupe suas séries favoritas para assistir depois.
-          </Typography>
-        </Box>
+        <Button
+          variant="outlined"
+          color="inherit"
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/")}
+          className={styles.backButton}
+          sx={{ color: "text.secondary", borderColor: "rgba(255,255,255,0.2)" }}
+        >
+          Voltar para Catálogo
+        </Button>
+
         <Button
           variant="contained"
           color="secondary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenForm()}
+          disableElevation
           className={styles.addButton}
         >
           Criar Lista
@@ -205,7 +216,11 @@ export function Watchlists() {
         autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert severity={snackbar.severity} variant="filled">
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ borderRadius: "8px" }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
