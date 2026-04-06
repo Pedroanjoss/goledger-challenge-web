@@ -1,11 +1,14 @@
 import axios from 'axios';
 import type { Episode, Season, TvShow, Watchlist } from '../types';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_AUTHORIZATION = import.meta.env.VITE_API_AUTHORIZATION 
+
 export const api = axios.create({
-  baseURL: 'http://ec2-50-19-36-138.compute-1.amazonaws.com/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': 'Basic Z29sZWRnZXI6NU54VkNBakM='
+    'Authorization': API_AUTHORIZATION
   }
 });
 
@@ -139,7 +142,7 @@ export const episodeService = {
   },
 
   create: async (episode: Episode, seasonKey: string) => {
-    // Garantindo que a data vá no formato ISO 8601 (ex: 2026-04-03T00:00:00.000Z)
+   
     const formattedDate = new Date(episode.releaseDate).toISOString();
 
     const payload: any = {
@@ -153,7 +156,7 @@ export const episodeService = {
       }]
     };
     
-    // O rating é opcional no banco, então só mandamos se ele existir
+   
     if (episode.rating !== undefined && episode.rating !== null) {
       payload.asset[0].rating = Number(episode.rating);
     }
@@ -204,14 +207,13 @@ export const watchlistService = {
     }
   },
 
-  // Recebe a Watchlist e um array de UUIDs (chaves reais) das séries selecionadas
+  
   create: async (watchlist: Watchlist, tvShowKeys: string[]) => {
     const payload = {
       asset: [{ 
         "@assetType": "watchlist",
         title: watchlist.title,
         description: watchlist.description || "",
-        // Mapeia o array de strings para um array de objetos de referência
         tvShows: tvShowKeys.map(key => ({ "@assetType": "tvShows", "@key": key }))
       }]
     };
@@ -236,10 +238,9 @@ export const watchlistService = {
   }),
 
   addTvShow: async (watchlist: Watchlist, tvShowKey: string) => {
-    // Pegamos as chaves que já existem e adicionamos a nova
+   
     const currentKeys = watchlist.tvShows ? watchlist.tvShows.map(s => s['@key']) : [];
     
-    // Evita duplicados no front antes de mandar
     if (currentKeys.includes(tvShowKey)) return;
 
     const newKeys = [...currentKeys, tvShowKey];
