@@ -38,8 +38,13 @@ export function EpisodeFormModal({ open, onClose, onSave, initialData }: Episode
     if (!formData.title.trim()) newErrors.title = "O título é obrigatório.";
     if (!formData.releaseDate) newErrors.releaseDate = "A data de lançamento é obrigatória.";
     if (!formData.description.trim()) newErrors.description = "A descrição é obrigatória.";
-    if (formData.rating !== undefined && (formData.rating < 0 || formData.rating > 10)) {
-      newErrors.rating = "A avaliação deve ser entre 0 e 10.";
+    
+   
+    if (formData.rating !== undefined && formData.rating !== null) {
+      const ratingNum = Number(formData.rating);
+      if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 10) {
+        newErrors.rating = "A avaliação deve ser um número entre 1 e 10.";
+      }
     }
     
     setErrors(newErrors);
@@ -51,7 +56,21 @@ export function EpisodeFormModal({ open, onClose, onSave, initialData }: Episode
     if (!validate()) return;
 
     setLoading(true);
-    await onSave({ ...formData, episodeNumber: Number(formData.episodeNumber) }, isEditing);
+    
+    
+    const payloadToSave: Episode = {
+      ...formData,
+      episodeNumber: Number(formData.episodeNumber)
+    };
+
+  
+    if (formData.rating !== undefined && formData.rating !== null && String(formData.rating).trim() !== '') {
+      payloadToSave.rating = Number(formData.rating);
+    } else {
+      delete payloadToSave.rating;
+    }
+
+    await onSave(payloadToSave, isEditing);
     setLoading(false);
   };
 
@@ -101,10 +120,19 @@ export function EpisodeFormModal({ open, onClose, onSave, initialData }: Episode
             label="Avaliação (Rating)"
             type="number"
             fullWidth
-            inputProps={{ min: 0, max: 10, step: 0.1 }}
-            placeholder="Opcional"
-            value={formData.rating ?? ''}
-            onChange={(e) => handleChange('rating', e.target.value ? Number(e.target.value) : undefined)}
+            inputProps={{ min: 1, max: 10, step: 0.1 }}
+            placeholder="Opcional (1 a 10)"
+          
+            value={formData.rating === undefined || formData.rating === null ? '' : formData.rating}
+            onChange={(e) => {
+              const val = e.target.value;
+          
+              if (val === '') {
+                handleChange('rating', undefined);
+              } else {
+                handleChange('rating', Number(val));
+              }
+            }}
             error={!!errors.rating}
             helperText={errors.rating || "Deixe em branco se não houver"}
             className={styles.inputField}

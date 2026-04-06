@@ -26,8 +26,8 @@ import { TvShowFormModal } from "../components/tvshows/TvShowFormModal";
 import { DeleteConfirmModal } from "../common/DeleteConfirmModal";
 import { AddToWatchlistModal } from "../components/watchlists/AddToWatchlistModal";
 import styles from "./style/TvShows.module.css";
+import { TvShowDetailsModal } from "../components/tvshows/TvShowDetailsModal";
 import { getErrorMessage } from "../utils/errorHandle";
-
 
 export function TvShows() {
   const navigate = useNavigate();
@@ -40,8 +40,10 @@ export function TvShows() {
   const [visibleCount, setVisibleCount] = useState(12);
   const observerTarget = useRef<HTMLDivElement | null>(null);
 
+  // Estados dos Modais
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [selectedShowToEdit, setSelectedShowToEdit] = useState<TvShow | null>(null);
+  
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [showToDelete, setShowToDelete] = useState<TvShow | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -49,11 +51,11 @@ export function TvShows() {
   const [watchlistModalOpen, setWatchlistModalOpen] = useState(false);
   const [selectedShowForList, setSelectedShowForList] = useState<TvShow | null>(null);
 
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
+  // NOVO: Estado para o modal de detalhes (leitura)
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [showToView, setShowToView] = useState<TvShow | null>(null);
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
 
   const loadData = async () => {
     try {
@@ -109,9 +111,15 @@ export function TvShows() {
     };
   }, [visibleShows]);
 
+  // Handlers
   const handleOpenForm = (show?: TvShow) => {
     setSelectedShowToEdit(show || null);
     setFormModalOpen(true);
+  };
+
+  const handleOpenDetails = (show: TvShow) => {
+    setShowToView(show);
+    setDetailsModalOpen(true);
   };
 
   const handleSaveShow = async (showData: TvShow, isEditing: boolean) => {
@@ -177,9 +185,7 @@ export function TvShows() {
   const handleCreateNewWatchlist = async (newTitle: string) => {
     if (!selectedShowForList?.["@key"]) return;
     try {
-      await watchlistService.create({ title: newTitle, description: "" }, [
-        selectedShowForList["@key"],
-      ]);
+      await watchlistService.create({ title: newTitle, description: "" }, [selectedShowForList["@key"]]);
       showToast(`Lista "${newTitle}" criada e série adicionada!`, "success");
       loadData();
     } catch (error) {
@@ -194,70 +200,42 @@ export function TvShows() {
 
   return (
     <Container className={styles.container}>
-      
       <Box mb={3}>
-        <Typography variant="h3" color="primary" className={styles.pageTitle}>
-          Catálogo
-        </Typography>
+        <Typography variant="h3" color="primary" className={styles.pageTitle}>Catálogo</Typography>
         <Typography variant="subtitle1" color="text.secondary">
           Gerencie e explore as séries disponíveis na plataforma.
         </Typography>
       </Box>
 
-   
       <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={4}>
-        
-     
         <TextField
           size="small"
           placeholder="Buscar série..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
+            startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>,
           }}
           className={styles.searchInput}
         />
 
         <Box display="flex" gap={2} flexWrap="wrap">
-          <Button
-            variant="outlined"
-            color="secondary"
-            startIcon={<Theaters />}
-            onClick={() => navigate("/watchlists")}
-            className={styles.listButton}
-          >
+          <Button variant="outlined" color="secondary" startIcon={<Theaters />} onClick={() => navigate("/watchlists")} className={styles.listButton}>
             Minhas Listas
           </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenForm()}
-            disableElevation
-            className={styles.addButton}
-          >
+          <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => handleOpenForm()} disableElevation className={styles.addButton}>
             Nova Série
           </Button>
         </Box>
       </Box>
 
-     
       {loading ? (
-        <Box className={styles.loaderContainer}>
-          <CircularProgress />
-        </Box>
+        <Box className={styles.loaderContainer}><CircularProgress /></Box>
       ) : (
         <Grid container spacing={3}>
           {visibleShows.length === 0 ? (
             <Grid size={{ xs: 12 }}>
-              <Typography variant="body1" color="text.secondary" className={styles.emptyState}>
-                Nenhuma série encontrada.
-              </Typography>
+              <Typography variant="body1" color="text.secondary" className={styles.emptyState}>Nenhuma série encontrada.</Typography>
             </Grid>
           ) : (
             visibleShows.map((show) => {
@@ -274,6 +252,7 @@ export function TvShows() {
                     onDelete={confirmDelete}
                     onViewSeasons={handleViewSeasons}
                     onAddToWatchlist={handleOpenWatchlistModal}
+                    onViewDetails={handleOpenDetails} // <-- Passando a função!
                   />
                 </Grid>
               );
@@ -282,41 +261,19 @@ export function TvShows() {
         </Grid>
       )}
 
-  
       {!loading && visibleCount < filteredShows.length && (
         <Box ref={observerTarget} display="flex" justifyContent="center" width="100%" p={4} mt={2}>
           <CircularProgress size={30} color="secondary" />
         </Box>
       )}
 
-  
-      <TvShowFormModal
-        open={formModalOpen}
-        onClose={() => setFormModalOpen(false)}
-        onSave={handleSaveShow}
-        initialData={selectedShowToEdit}
-      />
-      <DeleteConfirmModal
-        open={deleteModalOpen}
-        titleToDelete={showToDelete?.title || ""}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-        loading={deleteLoading}
-      />
-      <AddToWatchlistModal
-        open={watchlistModalOpen}
-        onClose={() => setWatchlistModalOpen(false)}
-        watchlists={userWatchlists}
-        onSelect={handleConfirmAddToWatchlist}
-        onCreateNew={handleCreateNewWatchlist}
-        loading={false}
-      />
+      {/* Todos os Modais Renderizados Aqui */}
+      <TvShowFormModal open={formModalOpen} onClose={() => setFormModalOpen(false)} onSave={handleSaveShow} initialData={selectedShowToEdit} />
+      <TvShowDetailsModal open={detailsModalOpen} onClose={() => setDetailsModalOpen(false)} show={showToView} />
+      <DeleteConfirmModal open={deleteModalOpen} titleToDelete={showToDelete?.title || ""} onClose={() => setDeleteModalOpen(false)} onConfirm={handleDelete} loading={deleteLoading} />
+      <AddToWatchlistModal open={watchlistModalOpen} onClose={() => setWatchlistModalOpen(false)} watchlists={userWatchlists} onSelect={handleConfirmAddToWatchlist} onCreateNew={handleCreateNewWatchlist} loading={false} />
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
         <Alert severity={snackbar.severity} variant="filled" className={styles.snackbarAlert}>
           {snackbar.message}
         </Alert>
