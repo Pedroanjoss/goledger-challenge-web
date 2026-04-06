@@ -3,6 +3,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import { darkTheme } from './theme';
 import { TvShows } from './pages/TvShows';
 import { Seasons } from './pages/Seasons';
+import { Watchlists } from './pages/Watchlists';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<Navigate to="/tvshows" replace />} />
           <Route path="/tvshows" element={<TvShows />} />
         <Route path="/tvshows/:showTitle/seasons" element={<Seasons />} />
+          <Route path="/watchlists" element={<Watchlists />} />      
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

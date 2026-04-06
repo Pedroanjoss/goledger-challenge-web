@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Episode, Season, TvShow } from '../types';
+import type { Episode, Season, TvShow, Watchlist } from '../types';
 
 export const api = axios.create({
   baseURL: 'http://ec2-50-19-36-138.compute-1.amazonaws.com/api',
@@ -186,4 +186,71 @@ export const episodeService = {
   delete: (key: string) => api.delete('/invoke/deleteAsset', {
     data: { key: { "@key": key, "@assetType": "episodes" } }
   })
+
+
+};
+
+export const watchlistService = {
+  list: async () => {
+    try {
+      const { data } = await api.post('/query/search', { 
+        query: { selector: { "@assetType": "watchlist" } } 
+      });
+      let result = data.result || (Array.isArray(data) ? data : []);
+      return result as Watchlist[];
+    } catch (error) {
+      console.error("❌ [DEBUG] Erro ao buscar watchlists:", error);
+      return [];
+    }
+  },
+
+  // Recebe a Watchlist e um array de UUIDs (chaves reais) das séries selecionadas
+  create: async (watchlist: Watchlist, tvShowKeys: string[]) => {
+    const payload = {
+      asset: [{ 
+        "@assetType": "watchlist",
+        title: watchlist.title,
+        description: watchlist.description || "",
+        // Mapeia o array de strings para um array de objetos de referência
+        tvShows: tvShowKeys.map(key => ({ "@assetType": "tvShows", "@key": key }))
+      }]
+    };
+    return api.post('/invoke/createAsset', payload);
+  },
+
+  update: async (watchlist: Watchlist, tvShowKeys: string[]) => {
+    const payload = {
+      update: { 
+        "@assetType": "watchlist",
+        "@key": watchlist['@key'],
+        title: watchlist.title,
+        description: watchlist.description || "",
+        tvShows: tvShowKeys.map(key => ({ "@assetType": "tvShows", "@key": key }))
+      }
+    };
+    return api.put('/invoke/updateAsset', payload);
+  },
+
+  delete: (key: string) => api.delete('/invoke/deleteAsset', {
+    data: { key: { "@key": key, "@assetType": "watchlist" } }
+  }),
+
+  addTvShow: async (watchlist: Watchlist, tvShowKey: string) => {
+    // Pegamos as chaves que já existem e adicionamos a nova
+    const currentKeys = watchlist.tvShows ? watchlist.tvShows.map(s => s['@key']) : [];
+    
+    // Evita duplicados no front antes de mandar
+    if (currentKeys.includes(tvShowKey)) return;
+
+    const newKeys = [...currentKeys, tvShowKey];
+
+    const payload = {
+      update: { 
+        "@assetType": "watchlist",
+        "@key": watchlist['@key'],
+        tvShows: newKeys.map(key => ({ "@assetType": "tvShows", "@key": key }))
+      }
+    };
+    return api.put('/invoke/updateAsset', payload);
+  }
 };
