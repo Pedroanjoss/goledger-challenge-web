@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, List, ListItem, ListItemButton, ListItemText, ListItemIcon, Typography, CircularProgress, Box, Button, TextField } from '@mui/material';
-import { PlaylistAdd, Add as AddIcon } from '@mui/icons-material';
+import { Dialog, DialogTitle, DialogContent, List, ListItem, ListItemButton, ListItemText, ListItemIcon, Typography, CircularProgress, Box, Button, TextField, Chip } from '@mui/material';
+import { PlaylistAdd, Add as AddIcon, CheckCircleOutline } from '@mui/icons-material';
 import type { Watchlist } from '../../types';
 import styles from './style/AddToWatchlistModal.module.css';
 
@@ -8,17 +8,17 @@ interface AddToWatchlistModalProps {
   open: boolean;
   onClose: () => void;
   watchlists: Watchlist[];
+  showKey: string | undefined; 
   onSelect: (watchlist: Watchlist) => Promise<void>;
-  onCreateNew: (title: string) => Promise<void>; // Nova função que passaremos!
+  onCreateNew: (title: string) => Promise<void>; 
   loading: boolean;
 }
 
-export function AddToWatchlistModal({ open, onClose, watchlists, onSelect, onCreateNew, loading }: AddToWatchlistModalProps) {
+export function AddToWatchlistModal({ open, onClose, watchlists, showKey, onSelect, onCreateNew, loading }: AddToWatchlistModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
-  // Zera o estado ao fechar
   const handleClose = () => {
     setIsCreating(false);
     setNewTitle('');
@@ -37,31 +37,43 @@ export function AddToWatchlistModal({ open, onClose, watchlists, onSelect, onCre
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs" PaperProps={{ className: styles.dialogPaper }}>
       <DialogTitle sx={{ fontWeight: 'bold' }}>Adicionar à Minha Lista</DialogTitle>
       
-      {/* Retiramos os dividers para o visual ficar mais limpo com a nova seção */}
       <DialogContent sx={{ p: 0 }}>
         {loading ? (
           <Box display="flex" justifyContent="center" p={3}><CircularProgress color="secondary" /></Box>
         ) : (
           <>
-            {/* 1. ÁREA DE LISTAS EXISTENTES */}
             {watchlists.length === 0 && !isCreating ? (
               <Typography className={styles.empty}>Você ainda não tem listas criadas.</Typography>
             ) : (
               !isCreating && (
                 <List sx={{ p: 1, maxHeight: '300px', overflowY: 'auto' }}>
-                  {watchlists.map((list) => (
-                    <ListItem key={list['@key']} disablePadding className={styles.listOption}>
-                      <ListItemButton onClick={() => onSelect(list)} sx={{ borderRadius: '8px' }}>
-                        <ListItemIcon><PlaylistAdd color="secondary" /></ListItemIcon>
-                        <ListItemText primary={list.title} secondary={`${list.tvShows?.length || 0} séries`} />
-                      </ListItemButton>
-                    </ListItem>
-                  ))}
+                  {watchlists.map((list) => {
+                    // VERIFICAÇÃO DE DUPLICATA:
+                    const isAlreadyInList = list.tvShows?.some(s => s['@key'] === showKey);
+
+                    return (
+                      <ListItem key={list['@key']} disablePadding className={styles.listOption}>
+                        <ListItemButton 
+                          onClick={() => onSelect(list)} 
+                          disabled={isAlreadyInList} // Desabilita o clique se já estiver na lista
+                          sx={{ borderRadius: '8px' }}
+                        >
+                          <ListItemIcon>
+                            {isAlreadyInList ? <CheckCircleOutline color="disabled" /> : <PlaylistAdd color="secondary" />}
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={list.title} 
+                            secondary={isAlreadyInList ? "Esta série já está nesta lista" : `${list.tvShows?.length || 0} séries`} 
+                            primaryTypographyProps={{ color: isAlreadyInList ? 'text.disabled' : 'text.primary' }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    );
+                  })}
                 </List>
               )
             )}
 
-            {/* 2. ÁREA DE CRIAÇÃO (On the fly) */}
             <Box className={styles.createSection}>
               {!isCreating ? (
                 <Button
@@ -73,7 +85,7 @@ export function AddToWatchlistModal({ open, onClose, watchlists, onSelect, onCre
                   Criar Nova Lista
                 </Button>
               ) : (
-                <Box display="flex" flexDirection="column" gap={2}>
+                <Box display="flex" flexDirection="column" gap={2} p={2}>
                   <Typography variant="subtitle2" color="secondary" fontWeight="bold">Nova Lista</Typography>
                   <TextField
                     autoFocus
